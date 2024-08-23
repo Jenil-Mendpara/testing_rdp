@@ -8,8 +8,20 @@ jobs:
     name: Start Building...
     runs-on: windows-latest
     timeout-minutes: 9999
-    
+
     steps:
+      - name: Set up cache directory
+        run: |
+          mkdir -p C:\cache\lm_data
+          echo "C:\cache\lm_data" > cache_path.txt
+
+      - name: Restore cached data
+        uses: actions/cache@v3
+        id: lm-cache
+        with:
+          path: C:\cache\lm_data
+          key: ${{ runner.os }}-lm-data
+
       - name: Downloading & Installing Essentials
         run: |
           Invoke-WebRequest -Uri "https://gitlab.com/chamod12/lm_win-10_github_rdp/-/raw/main/Downloads.bat" -OutFile "Downloads.bat"
@@ -20,3 +32,17 @@ jobs:
 
       - name: Time Counter
         run: cmd /c loop.bat
+
+      - name: Save data before stopping
+        run: |
+          echo "Saving data..."
+          # Copy your data to the cache directory
+          Copy-Item -Path "C:\path_to_your_data\*" -Destination "C:\cache\lm_data\" -Recurse -Force
+          # Mark the cache directory for future runs
+          echo "C:\cache\lm_data" > cache_path.txt
+
+      - name: Save cache
+        uses: actions/cache@v3
+        with:
+          path: C:\cache\lm_data
+          key: ${{ runner.os }}-lm-data
